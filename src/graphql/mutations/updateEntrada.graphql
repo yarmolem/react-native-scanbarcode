@@ -1,0 +1,12 @@
+mutation UpdateAsistencia($input: UpdateAsistenciaInput!) {
+  UpdateAsistencia(input: $input) {
+    asientoId
+    nombres
+    apellidos
+    tipoDocumento
+    numDocumento
+    codigo
+    asiento
+    estado
+  }
+}

@@ -1,0 +1,22 @@
+mutation ValidacionEntrada(
+  $tipoDocumento: String
+  $numDocumento: String
+  $constante: String
+  $fecha: Date
+) {
+  ValidacionEntrada(
+    tipoDocumento: $tipoDocumento
+    numDocumento: $numDocumento
+    constante: $constante
+    fecha: $fecha
+  ) {
+    asientoId
+    nombres
+    apellidos
+    tipoDocumento
+    numDocumento
+    codigo
+    asiento
+    estado
+  }
+}
