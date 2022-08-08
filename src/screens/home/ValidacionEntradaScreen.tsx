@@ -3,6 +3,7 @@ import {
   Keyboard,
   StyleSheet,
   TouchableWithoutFeedback,
+  ToastAndroid,
 } from 'react-native';
 import React, {useEffect} from 'react';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
@@ -14,23 +15,40 @@ import Heading from '../../components/shared/Heading';
 import Divider from '../../components/shared/Divider';
 import {AppStackParams} from '../../navigators/AppNavigator';
 
-import useForm from '../../hooks/useForm';
+import useForm, {FormError} from '../../hooks/useForm';
 import {colors} from '../../styles/theme';
 import {useValidacionEntradaMutation} from '../../generated/graphql';
+import isEmpty from 'validator/lib/isEmpty';
 
 type Props = NativeStackScreenProps<AppStackParams, 'ValidacionEntrada'>;
 
 const ValidacionEntradaScreen = ({route, navigation}: Props) => {
   const [validar, {loading}] = useValidacionEntradaMutation({
-    onError: err => console.log({err}),
+    onError: err => {
+      console.log({err});
+      ToastAndroid.show((err.graphQLErrors[0] as any).debugMessage, 3000);
+    },
   });
 
-  const {values, inputProps, onSubmit, setField, clear} = useForm({
+  const {values, errors, inputProps, onSubmit, setField, clear} = useForm({
     initialValues: {
       numDocumento: '',
       tipoDocumento: '',
       fecha: '2022-07-29',
       constante: 'LaEsperanza2405',
+    },
+    validate: state => {
+      const newErrors: FormError<typeof state> = {};
+
+      if (isEmpty(state.numDocumento)) {
+        newErrors.numDocumento = 'Este campo es requerido.';
+      }
+
+      if (isEmpty(state.tipoDocumento)) {
+        newErrors.tipoDocumento = 'Este campo es requerido.';
+      }
+
+      return newErrors;
     },
   });
 
@@ -65,6 +83,7 @@ const ValidacionEntradaScreen = ({route, navigation}: Props) => {
         <View>
           <Select
             style={styles.input}
+            error={errors.tipoDocumento}
             value={values.tipoDocumento}
             onValueChange={value => setField('tipoDocumento', value)}
             placeholder={{label: 'Selecciona documento', value: ''}}
@@ -77,6 +96,7 @@ const ValidacionEntradaScreen = ({route, navigation}: Props) => {
 
           <Input
             style={styles.input}
+            keyboardType="phone-pad"
             placeholder="Numero de documento"
             {...inputProps('numDocumento')}
           />

@@ -1,15 +1,19 @@
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import React from 'react';
+import React, {useEffect} from 'react';
 import {
   View,
   Keyboard,
   StyleSheet,
   TouchableWithoutFeedback,
+  BackHandler,
+  ToastAndroid,
 } from 'react-native';
 import Button from '../../components/shared/Button';
 
 import Heading from '../../components/shared/Heading';
+import IconButton from '../../components/shared/IconButton';
 import Paragraph from '../../components/shared/Paragraph';
+import {useUpdateAsistenciaMutation} from '../../generated/graphql';
 import {AppStackParams} from '../../navigators/AppNavigator';
 
 import {colors} from '../../styles/theme';
@@ -19,20 +23,56 @@ type Props = NativeStackScreenProps<AppStackParams, 'InfoAsientoScreen'>;
 const InfoAsientoScreen = ({route, navigation}: Props) => {
   const values = route.params;
 
-  const bgStyle = getBg(values.estado);
+  const [update, {loading}] = useUpdateAsistenciaMutation({
+    onError: err => {
+      console.log({err});
+      ToastAndroid.show((err.graphQLErrors[0] as any).debugMessage, 3000);
+    },
+  });
+
+  const bgStyle = getBg(values.estado!);
 
   const handleUpdate = async () => {
+    await update({
+      variables: {
+        input: {
+          asientoId: values.asientoId,
+          constante: 'LaEsperanza2405',
+          numDocumento: values.numDocumento,
+          tipoDocumento: values.tipoDocumento,
+        },
+      },
+    });
+
+    ToastAndroid.show('Entrada actualizada', 3000);
     navigation.navigate('ValidacionEntrada');
   };
+
+  useEffect(() => {
+    const backh = BackHandler.addEventListener('hardwareBackPress', () => {
+      navigation.navigate('ValidacionEntrada');
+      return true;
+    });
+
+    return () => {
+      backh.remove();
+    };
+  }, []);
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={styles.container}>
+        <IconButton
+          name="arrow-left"
+          style={styles.btn_back}
+          onPress={() => navigation.navigate('ValidacionEntrada')}
+        />
+
         <Heading size="4xl" weight="Bold">
           Asiento
         </Heading>
         <Heading size="lg" weight="Light" style={styles.subheading}>
-          Datos del asiento {values.asiento}
+          Datos del asiento {values.codigo}
         </Heading>
 
         <View style={[styles.card, bgStyle.bg]}>
@@ -78,14 +118,6 @@ const InfoAsientoScreen = ({route, navigation}: Props) => {
           </View>
           <View style={styles.card_row}>
             <Paragraph style={styles.card_p} weight="Bold">
-              Asiento
-            </Paragraph>
-            <Paragraph style={styles.card_p} weight="Bold">
-              {values.asiento}
-            </Paragraph>
-          </View>
-          <View style={styles.card_row}>
-            <Paragraph style={styles.card_p} weight="Bold">
               Estado
             </Paragraph>
             <Paragraph style={styles.card_p} weight="Bold">
@@ -94,7 +126,10 @@ const InfoAsientoScreen = ({route, navigation}: Props) => {
           </View>
         </View>
 
-        <Button onPress={handleUpdate} disabled={values.estado !== 'Pendiente'}>
+        <Button
+          loading={loading}
+          onPress={handleUpdate}
+          disabled={values.estado !== 'Pendiente'}>
           Actualizar
         </Button>
       </View>
@@ -132,4 +167,10 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   card_p: {color: colors.white},
+  btn_back: {
+    borderWidth: 1,
+    marginBottom: 24,
+    marginRight: 'auto',
+    borderColor: colors.primary,
+  },
 });

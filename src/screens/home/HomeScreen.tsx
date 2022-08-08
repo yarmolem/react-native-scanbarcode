@@ -1,4 +1,5 @@
 import React from 'react';
+import {useDispatch, useSelector} from 'react-redux';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {View, StyleSheet, TouchableNativeFeedback} from 'react-native';
 
@@ -8,13 +9,22 @@ import Paragraph from '../../components/shared/Paragraph';
 import {AppStackParams} from '../../navigators/AppNavigator';
 
 import {colors} from '../../styles/theme';
-import {useSelector} from 'react-redux';
 import {RootState} from '../../store';
+import IconButton from '../../components/shared/IconButton';
+import {logoutAction} from '../../store/slices/authSlice';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type Props = NativeStackScreenProps<AppStackParams, 'Home'>;
 
 const HomeScreen = ({navigation}: Props) => {
+  const dispatch = useDispatch();
   const name = useSelector((state: RootState) => state.auth.user.name);
+
+  const handleLogout = async () => {
+    await AsyncStorage.removeItem('@user');
+    await AsyncStorage.removeItem('@token');
+    dispatch(logoutAction());
+  };
 
   return (
     <View style={styles.container}>
@@ -40,6 +50,12 @@ const HomeScreen = ({navigation}: Props) => {
           </View>
         </TouchableNativeFeedback>
       </View>
+
+      <IconButton
+        name="logout"
+        onPress={handleLogout}
+        style={{marginTop: 'auto', marginLeft: 'auto'}}
+      />
     </View>
   );
 };

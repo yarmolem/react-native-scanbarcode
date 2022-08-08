@@ -4,6 +4,7 @@ import {
   Keyboard,
   StyleSheet,
   TouchableWithoutFeedback,
+  ToastAndroid,
 } from 'react-native';
 import isEmail from 'validator/lib/isEmail';
 import isEmpty from 'validator/lib/isEmpty';
@@ -26,13 +27,16 @@ const LoginScreen = () => {
   const dispath = useDispatch();
 
   const [login, {loading}] = useLoginMutation({
-    onError: err => console.log({err}),
+    onError: err => {
+      console.log({err});
+      ToastAndroid.show((err.graphQLErrors[0] as any).debugMessage, 3000);
+    },
   });
 
   const {values, inputProps, onSubmit} = useForm({
     initialValues: {
-      email: 'jose.jollja@gmail.com',
-      password: 'O5iyXS7TPpfKbHME',
+      email: '',
+      password: '',
     },
     validate: state => {
       const errors: FormError<typeof state> = {};

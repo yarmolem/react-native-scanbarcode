@@ -1,10 +1,9 @@
 import React, {useCallback, useState} from 'react';
-import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {ActivityIndicator, StyleSheet, View} from 'react-native';
+import {ActivityIndicator, StyleSheet, ToastAndroid, View} from 'react-native';
 import {Camera, useCameraDevices} from 'react-native-vision-camera';
+import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {BarcodeFormat, useScanBarcodes} from 'vision-camera-code-scanner';
 
-// import {useIsForeground} from '../../hooks/useIsForeground';
 import {AppStackParams} from '../../navigators/AppNavigator';
 import {useValidacionEntradaMutation} from '../../generated/graphql';
 
@@ -12,6 +11,7 @@ type Props = NativeStackScreenProps<AppStackParams, 'Camera'>;
 
 const checkPermissionsCamera = async () => {
   const cameraPermission = await Camera.getCameraPermissionStatus();
+  console.log({cameraPermission});
   if (cameraPermission !== 'authorized') {
     await Camera.requestCameraPermission();
   }
@@ -20,16 +20,19 @@ const checkPermissionsCamera = async () => {
 const CameraScreen = ({route, navigation}: Props) => {
   const from = route.params.from as keyof AppStackParams;
 
-  const [validar, {loading}] = useValidacionEntradaMutation({
-    onError: err => console.log({err}),
-  });
-
   const devices = useCameraDevices();
   const [isActive, setIsActive] = useState(true);
 
   const [frameProcessor, barcodes] = useScanBarcodes([
     BarcodeFormat.ALL_FORMATS,
   ]);
+  const [validar] = useValidacionEntradaMutation({
+    onError: err => {
+      console.log({err});
+      ToastAndroid.show((err.graphQLErrors[0] as any).debugMessage, 3000);
+      navigation.navigate('ValidacionEntrada');
+    },
+  });
 
   const device = devices.back;
 
@@ -68,7 +71,7 @@ const CameraScreen = ({route, navigation}: Props) => {
         });
       }, 200);
     }
-  }, [barcodes]);
+  }, [barcodes.length]);
 
   React.useEffect(() => {
     toggleActiveState();
