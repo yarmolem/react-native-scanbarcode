@@ -1,5 +1,11 @@
-import React, {useCallback, useState} from 'react';
-import {ActivityIndicator, StyleSheet, ToastAndroid, View} from 'react-native';
+import React, {useCallback, useEffect, useState} from 'react';
+import {
+  ActivityIndicator,
+  PermissionsAndroid,
+  StyleSheet,
+  ToastAndroid,
+  View,
+} from 'react-native';
 import {Camera, useCameraDevices} from 'react-native-vision-camera';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {BarcodeFormat, useScanBarcodes} from 'vision-camera-code-scanner';
@@ -9,11 +15,14 @@ import {useValidacionEntradaMutation} from '../../generated/graphql';
 
 type Props = NativeStackScreenProps<AppStackParams, 'Camera'>;
 
+const {check, request, PERMISSIONS} = PermissionsAndroid;
+
 const checkPermissionsCamera = async () => {
-  const cameraPermission = await Camera.getCameraPermissionStatus();
-  console.log({cameraPermission});
-  if (cameraPermission !== 'authorized') {
-    await Camera.requestCameraPermission();
+  const permission = PERMISSIONS.CAMERA;
+  const hasPermission = await check(permission);
+  console.log({hasPermission});
+  if (!hasPermission) {
+    await request(permission);
   }
 };
 
@@ -78,6 +87,10 @@ const CameraScreen = ({route, navigation}: Props) => {
     return () => setIsActive(false);
   }, [barcodes.length]);
 
+  useEffect(() => {
+    checkPermissionsCamera();
+  }, []);
+
   if (device == null) {
     return (
       <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
@@ -87,7 +100,7 @@ const CameraScreen = ({route, navigation}: Props) => {
   }
 
   return (
-    <View style={{flex: 1}} onLayout={checkPermissionsCamera}>
+    <View style={{flex: 1}}>
       <Camera
         device={device}
         style={StyleSheet.absoluteFill}
