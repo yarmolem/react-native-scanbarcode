@@ -19,6 +19,7 @@ import useForm, {FormError} from '../../hooks/useForm';
 import {colors} from '../../styles/theme';
 import {useValidacionEntradaMutation} from '../../generated/graphql';
 import isEmpty from 'validator/lib/isEmpty';
+import moment from 'moment';
 
 type Props = NativeStackScreenProps<AppStackParams, 'ValidacionEntrada'>;
 
@@ -34,8 +35,8 @@ const ValidacionEntradaScreen = ({route, navigation}: Props) => {
     initialValues: {
       numDocumento: '',
       tipoDocumento: '',
-      fecha: '2022-07-29',
       constante: 'LaEsperanza2405',
+      fecha: moment().format('YYYY-MM-DD'),
     },
     validate: state => {
       const newErrors: FormError<typeof state> = {};
